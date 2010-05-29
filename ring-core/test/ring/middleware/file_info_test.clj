@@ -11,6 +11,7 @@
 (def unknown-file (File. "test/ring/assets/random.xyz"))
 (def unknown-file-app (wrap-file-info (constantly {:headers {} :body unknown-file})))
 
+
 (defmacro with-custom-last-modified [file new-time form]
   "Lets us use a known file modification time for tests, without permanently changing
    the file's modification time"
@@ -33,7 +34,7 @@
 (deftest wrap-file-info-known-file-response
   (with-custom-last-modified known-file 1263506400
     (is (= {:headers {"Content-Type" "text/plain" "Content-Length" "6"
-                        "Last-Modified" "Thu, 14 Jan 2010 22:00:00 +0000"}
+                      "Last-Modified" "Thu, 14 Jan 2010 22:00:00 +0000"}
             :body    known-file}
            (known-file-app {})))))
 
@@ -50,3 +51,18 @@
                       "Last-Modified" "Thu, 01 Jan 1970 00:00:00 +0000"}
             :body known-file}
            (custom-type-app {})))))
+
+(deftest wrap-file-info-if-modified-since-hit
+  (with-custom-last-modified known-file 1263506400
+    (is (= {:status  304
+            :headers {"Content-Type" "text/plain" "Content-Length" "0"
+                      "Last-Modified" "Thu, 14 Jan 2010 22:00:00 +0000"}
+            :body    ""}
+           (known-file-app {:headers {"if-modified-since" "Thu, 14 Jan 2010 22:00:00 +0000" }})))))
+
+(deftest wrap-file-info-if-modified-miss
+  (with-custom-last-modified known-file 1263506400
+    (is (= {:headers {"Content-Type" "text/plain" "Content-Length" "6"
+                      "Last-Modified" "Thu, 14 Jan 2010 22:00:00 +0000"}
+            :body    known-file}
+           (known-file-app {:headers {"if-modified-since" "Fri, 15 Jan 2010 22:00:00 +0000"}})))))
