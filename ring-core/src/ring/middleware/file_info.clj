@@ -87,10 +87,13 @@
 
 (defn wrap-file-info
   "Wrap an app such that responses with a file a body will have 
-  corresponding Content-Type and Content-Length headers added if they can be
-  determined from the file.
+  corresponding Content-Type, Content-Length, and Last Modified headers added 
+  if they can be determined from the file.
   If two arguments are given, the second is taken to be a map of file extensions
-  to content types that will supplement the default, built-in map."
+  to content types that will supplement the default, built-in map.
+  If the request specifies If-Modified-Since in its header, and it is a literal 
+  match of the string returned as Last-Modified, a 304 with no body will be 
+  sent instead."
   [app & [custom-mime-types]]
   (let [mime-types (merge base-mime-types custom-mime-types)]
     (fn [req]
@@ -101,6 +104,7 @@
                  content-type     (guess-mime-type body mime-types)
                  server-lmodified (http-date (.lastModified body))
                  client-lmodified (get (:headers req) "if-modified-since")
+                 ;it'd be nice to have a real date comparison at some point
                  not-modified     (= client-lmodified server-lmodified)]
             (if not-modified
               (assoc response :status 304 :body "" :headers 
