@@ -100,7 +100,6 @@
       (let [{:keys [headers body] :as response} (app req)]
         (if (instance? File body)
           (let [
-                 file-size        (str (.length #^File body))
                  content-type     (guess-mime-type body mime-types)
                  server-lmodified (http-date (.lastModified body))
                  client-lmodified (get (:headers req) "if-modified-since")
@@ -112,7 +111,7 @@
                                "Content-Type"   content-type
                                "Last-Modified"  server-lmodified))
               (assoc response :headers
-                (assoc headers "Content-Length" file-size
+                (assoc headers "Content-Length" (str (.length #^File body))
                                "Content-Type"   content-type
                                "Last-Modified"  server-lmodified))))
           response)))))
