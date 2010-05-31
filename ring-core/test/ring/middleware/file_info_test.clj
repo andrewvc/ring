@@ -11,7 +11,6 @@
 (def unknown-file (File. "test/ring/assets/random.xyz"))
 (def unknown-file-app (wrap-file-info (constantly {:headers {} :body unknown-file})))
 
-
 (defmacro with-custom-last-modified [file new-time form]
   "Lets us use a known file modification time for tests, without permanently changing
    the file's modification time"
@@ -65,4 +64,4 @@
     (is (= {:headers {"Content-Type" "text/plain" "Content-Length" "6"
                       "Last-Modified" "Thu, 14 Jan 2010 22:00:00 +0000"}
             :body    known-file}
-           (known-file-app {:headers {"if-modified-since" "Fri, 15 Jan 2010 22:00:00 +0000"}})))))
+           (known-file-app {:headers {"if-modified-since" "Wed, 13 Jan 2010 22:00:00 +0000"}})))))
